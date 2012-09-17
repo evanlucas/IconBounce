@@ -1,0 +1,10 @@
+{
+	entry = {
+		bundle = "IconBouncePreferences";
+		cell = PSLinkCell;
+		detail = "IconBouncePreferencesListController";
+		icon = "Icon.png";
+		isController = 1;
+		label = IconBounce;
+	};
+}
