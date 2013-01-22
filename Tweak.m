@@ -37,7 +37,8 @@ typedef enum AnimationType{
     AnimationTypeFlipHorizontal,
     AnimationTypeFlipVertical,
     AnimationTypeBounce,
-    AnimationTypeRotateFlipAndBounce
+    AnimationTypeRotateFlipAndBounce,
+    AnimationTypeSwing
 } AnimationType;
 
 @interface ELManager : NSObject
@@ -109,6 +110,26 @@ static ELManager *sharedManager;
     }
     return [NSArray arrayWithArray:tempArray];
 }
+
+- (NSArray *)positiveSwing:(BOOL)positive {
+    NSMutableArray *tempArray = [NSMutableArray array];
+    if (positive) {
+        for (int i=1.0; i<45.0; i++) {
+            [tempArray addObject:[self deg:i]];
+        }
+    } else {
+        for (int i=1.0; i<45.0; i++) {
+            [tempArray addObject:[self deg:-i]];
+        }
+    }
+    return [NSArray arrayWithArray:tempArray];
+}
+- (NSArray *)swing {
+    return [NSArray arrayWithObjects:[self deg:45], [self deg:-45], [self deg:30], [self deg:-30], [self deg:15], [self deg:-15], nil];
+}
+- (NSNumber *)deg:(float)a {
+    return [NSNumber numberWithFloat:(a/180.0f)*M_PI];
+}
 - (void)performBounce {
     SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
     Class SBIconView = NSClassFromString(@"SBIconView");
@@ -123,7 +144,7 @@ static ELManager *sharedManager;
                 if (count != 0) {
                     int current = (int)(arc4random() % count);
                     if ([[dockIcons objectAtIndex:current] isKindOfClass:[SBIconView class]]) {
-                        AnimationType animType = (AnimationType)(arc4random() % 6);
+                        AnimationType animType = (AnimationType)(arc4random() % 7);
                         SBIconView *theIconView = [dockIcons objectAtIndex:current];
                         [self performBounceForIconView:theIconView atIndex:current withAnimationType:animType];
                     }
@@ -135,7 +156,7 @@ static ELManager *sharedManager;
             if (count != 0) {
                 if ([[dockIcons objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
                     int current = (int)(arc4random() % count);
-                    AnimationType animType = (AnimationType)(arc4random() % 6);
+                    AnimationType animType = (AnimationType)(arc4random() % 7);
                     SBIconView *theIconView = [dockIcons objectAtIndex:current];
                     [self performBounceForIconView:theIconView atIndex:current withAnimationType:animType];
                 }
@@ -159,6 +180,7 @@ static ELManager *sharedManager;
     
         case AnimationTypeRotateClockwise:
         {
+            [self setAnchorPoint:CGPointMake(0.5, 0.5) forView:iv];
             CGPoint c = iv.center;
             CALayer *layer = iv.layer;
             NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
@@ -192,6 +214,7 @@ static ELManager *sharedManager;
             break;
         case AnimationTypeRotateCounterClockwise:
         {
+            [self setAnchorPoint:CGPointMake(0.5, 0.5) forView:iv];
             CGPoint c = iv.center;
             CALayer *layer = iv.layer;
             NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
@@ -223,6 +246,7 @@ static ELManager *sharedManager;
             break;
         case AnimationTypeFlipHorizontal:
         {
+            [self setAnchorPoint:CGPointMake(0.5, 0.5) forView:iv];
             CGPoint c = iv.center;
             CALayer *layer = iv.layer;
             NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
@@ -254,6 +278,7 @@ static ELManager *sharedManager;
             break;
         case AnimationTypeFlipVertical:
         {
+            [self setAnchorPoint:CGPointMake(0.5, 0.5) forView:iv];
             CGPoint c = iv.center;
             CALayer *layer = iv.layer;
             NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
@@ -285,6 +310,7 @@ static ELManager *sharedManager;
             break;
         case AnimationTypeBounce:
         {
+            [self setAnchorPoint:CGPointMake(0.5, 0.5) forView:iv];
             CGPoint c = iv.center;
             CALayer *layer = iv.layer;
             NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
@@ -304,6 +330,7 @@ static ELManager *sharedManager;
             break;
         case AnimationTypeRotateFlipAndBounce:
         {
+            [self setAnchorPoint:CGPointMake(0.5, 0.5) forView:iv];
             CGPoint c = iv.center;
             CALayer *layer = iv.layer;
             NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
@@ -342,13 +369,64 @@ static ELManager *sharedManager;
             [layer addAnimation:group forKey:animationName];
         }
             break;
-         
+        case AnimationTypeSwing:
+        {
+            [self setAnchorPoint:CGPointMake(0.5, 0) forView:iv];
+            
+            CGPoint c = iv.center;
+            CALayer *layer = iv.layer;
+            NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
+            [layer removeAnimationForKey:animationName];
+            CAKeyframeAnimation *anim1 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+            anim1.repeatCount = 1;
+            anim1.duration = 0.6;
+            anim1.removedOnCompletion = NO;
+            anim1.fillMode = kCAFillModeForwards;
+            anim1.values = [self positiveSwing:YES];
+            
+            CAKeyframeAnimation *anim2 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+            anim2.repeatCount = 1;
+            anim2.duration = 0.6;
+            anim2.removedOnCompletion = NO;
+            anim2.fillMode = kCAFillModeForwards;
+            anim2.values = [self positiveSwing:NO];
+            
+            CAKeyframeAnimation *anim3 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+            anim3.repeatCount = 1;
+            anim3.duration = 0.6;
+            anim3.removedOnCompletion = NO;
+            anim3.fillMode = kCAFillModeForwards;
+            anim3.values = [NSArray arrayWithObjects:[NSNumber numberWithFloat:0], nil];
+            
+            CAAnimationGroup *group = [CAAnimationGroup animation];
+            group.animations = [NSArray arrayWithObjects:anim1, anim2, anim3, nil];
+            group.duration = 1.6;
+            [layer addAnimation:group forKey:animationName];
+        }
+            break;
         default:
             break;
     }
 }
 
-
+- (void)setAnchorPoint:(CGPoint)anchorPoint forView:(UIView *)view {
+    CGPoint newPoint = CGPointMake(view.bounds.size.width * anchorPoint.x, view.bounds.size.height * anchorPoint.y);
+    CGPoint oldPoint = CGPointMake(view.bounds.size.width * view.layer.anchorPoint.x, view.bounds.size.height * view.layer.anchorPoint.y);
+    
+    newPoint = CGPointApplyAffineTransform(newPoint, view.transform);
+    oldPoint = CGPointApplyAffineTransform(oldPoint, view.transform);
+    
+    CGPoint position = view.layer.position;
+    
+    position.x -= oldPoint.x;
+    position.x += newPoint.x;
+    
+    position.y -= oldPoint.y;
+    position.y += newPoint.y;
+    
+    view.layer.position = position;
+    view.layer.anchorPoint = anchorPoint;
+}
 
 @end
 
