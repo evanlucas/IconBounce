@@ -2,6 +2,7 @@
 {
     NSArray *_specifiers;
 }
+- (NSArray *)loadSpecifiersFromPlistName:(NSString *)name target:(id)target;
 @end
 @interface IconBouncePreferencesListController: PSListController {
 }

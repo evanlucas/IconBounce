@@ -37,22 +37,25 @@ typedef enum AnimationType{
     AnimationTypeFlipHorizontal,
     AnimationTypeFlipVertical,
     AnimationTypeBounce,
-    AnimationTypeRotateFlipAndBounce,
-    AnimationTypeSwing
+    AnimationTypeRotateFlipAndBounce
 } AnimationType;
 
+static BOOL enabled = YES;
+static double animationDuration = 1.6;
+static double bounceInterval = 2.7;
+
 @interface ELManager : NSObject
-{
-    NSTimer *theTimer;
-}
 + (ELManager *)sharedELManager;
 - (void)performBounce;
 - (void)performBounceForIconView:(SBIconView *)iv atIndex:(NSInteger)index withAnimationType:(AnimationType)type;
 - (void)repeatTimer:(NSTimer *)timer;
 - (void)startBouncing;
-- (BOOL)enabled;
+//- (BOOL)enabled;
+//- (double)animationDuration;
+//- (double)bounceInterval;
 - (BOOL)hasOtherDockTweaks;
 - (NSArray *)positiveRotation:(BOOL)positive;
+- (void)setAnchorPoint:(CGPoint)pt forView:(UIView *)v;
 @property (nonatomic, retain) NSTimer *theTimer;
 @end
 //static NSDictionary *prefsDict = nil;
@@ -72,6 +75,7 @@ static ELManager *sharedManager;
     [theTimer release];
     [super dealloc];
 }
+/*
 - (BOOL)enabled {
     NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:PreferencesFilePath];
     if (d) {
@@ -79,6 +83,24 @@ static ELManager *sharedManager;
     }
     return YES;
 }
+- (double)animationDuration {
+    NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:PreferencesFilePath];
+    if (d) {
+        return [[d objectForKey:@"animationDuration"] doubleValue] ? 1.6;
+    }
+    
+    return 1.6;
+}
+
+- (double)bounceInterval {
+    NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:PreferencesFilePath];
+    if (d) {
+        return [[d objectForKey:@"bounceInterval"] doubleValue] ? 2.7;
+    }
+    
+    return 2.7;
+}
+ */
 - (BOOL)hasOtherDockTweaks {
     NSFileManager *fm = [NSFileManager defaultManager];
     if ([fm fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/Infinidock.dylib"]) {
@@ -91,10 +113,46 @@ static ELManager *sharedManager;
 }
 
 - (void)startBouncing {
-    if (!theTimer) {
-        theTimer = [NSTimer scheduledTimerWithTimeInterval:2.7 target:self selector:@selector(repeatTimer:) userInfo:nil repeats:YES];
+    [theTimer invalidate];
+    [self removeAnimations];
+    double ti = bounceInterval;
+    if (bounceInterval < animationDuration) {
+        ti += animationDuration;
     }
+        
+    theTimer = [NSTimer scheduledTimerWithTimeInterval:ti target:self selector:@selector(repeatTimer:) userInfo:nil repeats:YES];
     [self performBounce];
+}
+- (void)removeAnimations {
+    SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
+    Class SBIconView = NSClassFromString(@"SBIconView");
+    if (enabled){
+        SBDockIconListView *dock = [controller dock];
+        if ([self hasOtherDockTweaks]) {
+            //Class IFScrollView = NSClassFromString(@"IFScrollView");
+            NSArray *a = [dock subviews];
+            if (![[a objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
+                NSArray *dockIcons = [[a objectAtIndex:0] subviews];
+                int count = [dockIcons count];
+                for (int i=0; i<count; i++) {
+                    if ([[dockIcons objectAtIndex:i] isKindOfClass:[SBIconView class]]) {
+                        CALayer *layer = [[dockIcons objectAtIndex:i] layer];
+                        [layer removeAllAnimations];
+                    }
+                }
+            }
+        } else {
+            NSArray *dockIcons = [dock subviews];
+            int count = [dockIcons count];
+            for (int i=0; i<count; i++) {
+                if ([[dockIcons objectAtIndex:i] isKindOfClass:[SBIconView class]]) {
+                    CALayer *layer = [[dockIcons objectAtIndex:i] layer];
+                    [layer removeAllAnimations];
+                }
+            }
+        }
+    }
+
 }
 - (NSArray *)positiveRotation:(BOOL)positive {
     NSMutableArray *tempArray = [NSMutableArray array];
@@ -111,34 +169,35 @@ static ELManager *sharedManager;
     return [NSArray arrayWithArray:tempArray];
 }
 
-- (NSArray *)swingValues {
-    CGFloat start = 40.0f;
-    NSMutableArray *temp = [[NSMutableArray alloc] init];
-    for (int i=0; i<start; i+= 20) {
-        [temp addObject:[NSNumber numberWithFloat:(start/180.0)*M_PI]];
-        [temp addObject:[NSNumber numberWithFloat:(-start/180.0)*M_PI]];
-    }
-    [temp addObject:[NSNumber numberWithFloat:0]];
-    return [NSArray arrayWithArray:temp];
-}
-- (NSArray *)swingTimings {
-    NSMutableArray *temp = [[NSMutableArray alloc] init];
-    for (int i=0; i<40.0f; i+= 20) {
-        [temp addObject:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
-    }
-    return [NSArray arrayWithArray:temp];
-}
+//- (NSArray *)swingValues {
+//    CGFloat start = 40.0f;
+//    NSMutableArray *temp = [[NSMutableArray alloc] init];
+//    for (int i=0; i<start; i+= 20) {
+//        [temp addObject:[NSNumber numberWithFloat:(start/180.0)*M_PI]];
+//        [temp addObject:[NSNumber numberWithFloat:(-start/180.0)*M_PI]];
+//    }
+//    [temp addObject:[NSNumber numberWithFloat:0]];
+//    return [NSArray arrayWithArray:temp];
+//}
+//- (NSArray *)swingTimings {
+//    NSMutableArray *temp = [[NSMutableArray alloc] init];
+//    for (int i=0; i<40.0f; i+= 20) {
+//        [temp addObject:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+//    }
+//    return [NSArray arrayWithArray:temp];
+//}
 
-- (NSArray *)swing {
-    return [NSArray arrayWithObjects:[self deg:45], [self deg:-45], [self deg:30], [self deg:-30], [self deg:15], [self deg:-15], nil];
-}
+//- (NSArray *)swing {
+//    return [NSArray arrayWithObjects:[self deg:45], [self deg:-45], [self deg:30], [self deg:-30], [self deg:15], [self deg:-15], nil];
+//}
 - (NSNumber *)deg:(float)a {
     return [NSNumber numberWithFloat:(a/180.0f)*M_PI];
 }
 - (void)performBounce {
+    NSLog(@"PERFORM BOUNCE");
     SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
     Class SBIconView = NSClassFromString(@"SBIconView");
-    if ([self enabled]){
+    if (enabled){
         SBDockIconListView *dock = [controller dock];
         if ([self hasOtherDockTweaks]) {
             //Class IFScrollView = NSClassFromString(@"IFScrollView");
@@ -149,7 +208,7 @@ static ELManager *sharedManager;
                 if (count != 0) {
                     int current = (int)(arc4random() % count);
                     if ([[dockIcons objectAtIndex:current] isKindOfClass:[SBIconView class]]) {
-                        AnimationType animType = (AnimationType)(arc4random() % 7);
+                        AnimationType animType = (AnimationType)(arc4random() % 6);
                         SBIconView *theIconView = [dockIcons objectAtIndex:current];
                         [self performBounceForIconView:theIconView atIndex:current withAnimationType:animType];
                     }
@@ -161,7 +220,7 @@ static ELManager *sharedManager;
             if (count != 0) {
                 if ([[dockIcons objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
                     int current = (int)(arc4random() % count);
-                    AnimationType animType = (AnimationType)(arc4random() % 7);
+                    AnimationType animType = (AnimationType)(arc4random() % 6);
                     SBIconView *theIconView = [dockIcons objectAtIndex:current];
                     [self performBounceForIconView:theIconView atIndex:current withAnimationType:animType];
                 }
@@ -173,13 +232,11 @@ static ELManager *sharedManager;
     }
 }
 - (void)repeatTimer:(NSTimer *)timer {
-    if ([self enabled]) {
+    if (enabled) {
         [self performBounce];
     }
 }
-- (void)updateShadow:(NSTimer *)timer {
-    
-}
+
 - (void)performBounceForIconView:(SBIconView *)iv atIndex:(NSInteger)index withAnimationType:(AnimationType)type {
     switch (type) {
     
@@ -198,11 +255,11 @@ static ELManager *sharedManager;
             anim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             anim.path = path;
             anim.repeatCount = 2;
-            anim.duration = 0.8;
+            anim.duration = animationDuration/2;
             anim.delegate = self;
     
             CAKeyframeAnimation *anim2 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-            anim2.duration = 1.6;
+            anim2.duration = animationDuration;
             anim2.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
             anim2.repeatCount = 1;
             anim2.removedOnCompletion = NO;
@@ -210,7 +267,7 @@ static ELManager *sharedManager;
             anim2.values = [self positiveRotation:YES];
             CAAnimationGroup *group = [CAAnimationGroup animation];
             group.animations = [NSArray arrayWithObjects:anim, anim2, nil];
-            group.duration = 1.6;
+            group.duration = animationDuration;
             CGPathRelease(path);
             [layer addAnimation:group forKey:animationName];
             
@@ -232,11 +289,11 @@ static ELManager *sharedManager;
             anim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             anim.path = path;
             anim.repeatCount = 2;
-            anim.duration = 0.8;
+            anim.duration = animationDuration/2;
             anim.delegate = self;
     
             CAKeyframeAnimation *anim2 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-            anim2.duration = 1.6;
+            anim2.duration = animationDuration;
             anim2.repeatCount = 1;
             anim2.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
             anim2.removedOnCompletion = NO;
@@ -244,7 +301,7 @@ static ELManager *sharedManager;
             anim2.values = [self positiveRotation:NO];
             CAAnimationGroup *group = [CAAnimationGroup animation];
             group.animations = [NSArray arrayWithObjects:anim, anim2, nil];
-            group.duration = 1.6;
+            group.duration = animationDuration;
             CGPathRelease(path);
             [layer addAnimation:group forKey:animationName];
         }
@@ -264,11 +321,11 @@ static ELManager *sharedManager;
             anim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             anim.path = path;
             anim.repeatCount = 2;
-            anim.duration = 0.8;
+            anim.duration = animationDuration/2;
             anim.delegate = self;
     
             CAKeyframeAnimation *anim2 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.y"];
-            anim2.duration = 1.6;
+            anim2.duration = animationDuration;
             anim2.repeatCount = 1;
             anim2.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
             anim2.removedOnCompletion = NO;
@@ -276,7 +333,7 @@ static ELManager *sharedManager;
             anim2.values = [self positiveRotation:NO];
             CAAnimationGroup *group = [CAAnimationGroup animation];
             group.animations = [NSArray arrayWithObjects:anim, anim2, nil];
-            group.duration = 1.6;
+            group.duration = animationDuration;
             CGPathRelease(path);
             [layer addAnimation:group forKey:animationName];
         }
@@ -296,11 +353,11 @@ static ELManager *sharedManager;
             anim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             anim.path = path;
             anim.repeatCount = 2;
-            anim.duration = 0.8;
+            anim.duration = animationDuration/2;
             anim.delegate = self;
     
             CAKeyframeAnimation *anim2 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.x"];
-            anim2.duration = 1.6;
+            anim2.duration = animationDuration;
             anim2.repeatCount = 1;
             anim2.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
             anim2.removedOnCompletion = NO;
@@ -308,7 +365,7 @@ static ELManager *sharedManager;
             anim2.values = [self positiveRotation:NO];
             CAAnimationGroup *group = [CAAnimationGroup animation];
             group.animations = [NSArray arrayWithObjects:anim, anim2, nil];
-            group.duration = 1.6;
+            group.duration = animationDuration;
             CGPathRelease(path);
             [layer addAnimation:group forKey:animationName];
         }
@@ -328,7 +385,7 @@ static ELManager *sharedManager;
             anim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             anim.path = path;
             anim.repeatCount = 2;
-            anim.duration = 0.8;
+            anim.duration = animationDuration/2;
             anim.delegate = self;
             [layer addAnimation:anim forKey:animationName];
         }
@@ -348,11 +405,11 @@ static ELManager *sharedManager;
             anim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             anim.path = path;
             anim.repeatCount = 2;
-            anim.duration = 0.8;
+            anim.duration = animationDuration/2;
             anim.delegate = self;
     
             CAKeyframeAnimation *anim2 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.x"];
-            anim2.duration = 1.6;
+            anim2.duration = animationDuration;
             anim2.repeatCount = 1;
             anim2.removedOnCompletion = NO;
             anim2.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
@@ -360,7 +417,7 @@ static ELManager *sharedManager;
             anim2.values = [self positiveRotation:NO];
             
             CAKeyframeAnimation *anim3 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.y"];
-            anim3.duration = 1.6;
+            anim3.duration = animationDuration;
             anim3.repeatCount = 1;
             anim3.removedOnCompletion = NO;
             anim3.fillMode = kCAFillModeForwards;
@@ -369,28 +426,28 @@ static ELManager *sharedManager;
             
             CAAnimationGroup *group = [CAAnimationGroup animation];
             group.animations = [NSArray arrayWithObjects:anim, anim2, anim3, nil];
-            group.duration = 1.6;
+            group.duration = animationDuration;
             CGPathRelease(path);
             [layer addAnimation:group forKey:animationName];
         }
             break;
-        case AnimationTypeSwing:
-        {
-            [self setAnchorPoint:CGPointMake(0.5, 0) forView:iv];
-            
-            CALayer *layer = iv.layer;
-            NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
-            [layer removeAnimationForKey:animationName];
-            CAKeyframeAnimation *anim1 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-            anim1.repeatCount = 1;
-            anim1.duration = 1.6;
-            anim1.removedOnCompletion = NO;
-            anim1.fillMode = kCAFillModeForwards;
-            anim1.values = [self swingValues];
-            anim1.timingFunctions = [self swingTimings];
-			[layer addAnimation:anim1 forKey:animationName];
-        }
-            break;
+//        case AnimationTypeSwing:
+//        {
+//            [self setAnchorPoint:CGPointMake(0.5, 0) forView:iv];
+//            
+//            CALayer *layer = iv.layer;
+//            NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
+//            [layer removeAnimationForKey:animationName];
+//            CAKeyframeAnimation *anim1 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+//            anim1.repeatCount = 1;
+//            anim1.duration = 1.6;
+//            anim1.removedOnCompletion = NO;
+//            anim1.fillMode = kCAFillModeForwards;
+//            anim1.values = [self swingValues];
+//            anim1.timingFunctions = [self swingTimings];
+//			[layer addAnimation:anim1 forKey:animationName];
+//        }
+//            break;
         default:
             break;
     }
@@ -423,6 +480,20 @@ static ELManager *sharedManager;
     [[ELManager sharedELManager] startBouncing];
 }
 %end
+
+%hook SBFolderIcon
+- (void)launch {
+    [[ELManager sharedELManager] removeAnimations];
+    %orig;
+}
+%end
+
+%hook SBIconController
+- (void)closeFolderTimerFired {
+    [[ELManager sharedELManager] startBouncing];
+    %orig;
+}
+%end
 /*
 static void preferenceChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
 	[prefsDict release];
@@ -430,22 +501,54 @@ static void preferenceChangedCallback(CFNotificationCenterRef center, void *obse
 }
  */
 
-__attribute__((constructor)) static void sbc_init() {
+static void LoadSettings(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
+{
+    NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
+    id temp = [dict objectForKey:@"enableIconBounce"];
+    enabled = !temp || [temp boolValue];
+    if ([[dict objectForKey:@"animationDuration"] doubleValue]) {
+        animationDuration = [[dict objectForKey:@"animationDuration"] doubleValue];
+    } else {
+        animationDuration = 1.6;
+    }
+    if ([[dict objectForKey:@"bounceInterval"] doubleValue]) {
+        bounceInterval = [[dict objectForKey:@"bounceInterval"] doubleValue];
+    } else {
+        bounceInterval = 2.7;
+    }
+    [[ELManager sharedELManager] startBouncing];
+    [dict release];
+}
+
+__attribute__((constructor)) static void ib_init() {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
 	// SpringBoard only!
 	if (![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.springboard"])
 		return;
+    
     if (![[NSFileManager defaultManager] fileExistsAtPath:PreferencesFilePath]) {
         NSMutableDictionary *d = [NSMutableDictionary dictionary];
         [d setValue:[NSNumber numberWithBool:YES] forKey:@"enableIconBounce"];
+        [d setValue:[NSNumber numberWithDouble:1.6] forKey:@"animationDuration"];
+        [d setValue:[NSNumber numberWithDouble:2.7] forKey:@"bounceInterval"];
         [d writeToFile:PreferencesFilePath atomically:YES];
+    } else {
+        NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
+        enabled = [[dict objectForKey:@"enableIconBounce"] boolValue];
+        if ([[dict objectForKey:@"animationDuration"] doubleValue]) {
+            animationDuration = [[dict objectForKey:@"animationDuration"] doubleValue];
+        } else {
+            animationDuration = 1.6;
+        }
+        if ([[dict objectForKey:@"bounceInterval"] doubleValue]) {
+            bounceInterval = [[dict objectForKey:@"bounceInterval"] doubleValue];
+        } else {
+            bounceInterval = 2.7;
+        }
+        [dict release];
     }
-    /*
-	prefsDict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, preferenceChangedCallback, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
-    */
-
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, LoadSettings, CFSTR("com.iconbouncepreferences.prefs"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	[pool release];
 }
 
