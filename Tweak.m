@@ -111,19 +111,24 @@ static ELManager *sharedManager;
     return [NSArray arrayWithArray:tempArray];
 }
 
-- (NSArray *)positiveSwing:(BOOL)positive {
-    NSMutableArray *tempArray = [NSMutableArray array];
-    if (positive) {
-        for (int i=1.0; i<45.0; i++) {
-            [tempArray addObject:[self deg:i]];
-        }
-    } else {
-        for (int i=1.0; i<45.0; i++) {
-            [tempArray addObject:[self deg:-i]];
-        }
+- (NSArray *)swingValues {
+    CGFloat start = 40.0f;
+    NSMutableArray *temp = [[NSMutableArray alloc] init];
+    for (int i=0; i<start; i+= 20) {
+        [temp addObject:[NSNumber numberWithFloat:(start/180.0)*M_PI]];
+        [temp addObject:[NSNumber numberWithFloat:(-start/180.0)*M_PI]];
     }
-    return [NSArray arrayWithArray:tempArray];
+    [temp addObject:[NSNumber numberWithFloat:0]];
+    return [NSArray arrayWithArray:temp];
 }
+- (NSArray *)swingTimings {
+    NSMutableArray *temp = [[NSMutableArray alloc] init];
+    for (int i=0; i<40.0f; i+= 20) {
+        [temp addObject:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+    }
+    return [NSArray arrayWithArray:temp];
+}
+
 - (NSArray *)swing {
     return [NSArray arrayWithObjects:[self deg:45], [self deg:-45], [self deg:30], [self deg:-30], [self deg:15], [self deg:-15], nil];
 }
@@ -373,35 +378,17 @@ static ELManager *sharedManager;
         {
             [self setAnchorPoint:CGPointMake(0.5, 0) forView:iv];
             
-            CGPoint c = iv.center;
             CALayer *layer = iv.layer;
             NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
             [layer removeAnimationForKey:animationName];
             CAKeyframeAnimation *anim1 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
             anim1.repeatCount = 1;
-            anim1.duration = 0.6;
+            anim1.duration = 1.6;
             anim1.removedOnCompletion = NO;
             anim1.fillMode = kCAFillModeForwards;
-            anim1.values = [self positiveSwing:YES];
-            
-            CAKeyframeAnimation *anim2 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-            anim2.repeatCount = 1;
-            anim2.duration = 0.6;
-            anim2.removedOnCompletion = NO;
-            anim2.fillMode = kCAFillModeForwards;
-            anim2.values = [self positiveSwing:NO];
-            
-            CAKeyframeAnimation *anim3 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-            anim3.repeatCount = 1;
-            anim3.duration = 0.6;
-            anim3.removedOnCompletion = NO;
-            anim3.fillMode = kCAFillModeForwards;
-            anim3.values = [NSArray arrayWithObjects:[NSNumber numberWithFloat:0], nil];
-            
-            CAAnimationGroup *group = [CAAnimationGroup animation];
-            group.animations = [NSArray arrayWithObjects:anim1, anim2, anim3, nil];
-            group.duration = 1.6;
-            [layer addAnimation:group forKey:animationName];
+            anim1.values = [self swingValues];
+            anim1.timingFunctions = [self swingTimings];
+			[layer addAnimation:anim1 forKey:animationName];
         }
             break;
         default:
@@ -461,3 +448,5 @@ __attribute__((constructor)) static void sbc_init() {
 
 	[pool release];
 }
+
+/* vim: set filetype=objcpp sw=4 ts=4 expandtab tw=80 ff=unix */

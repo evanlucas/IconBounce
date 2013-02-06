@@ -1,5 +1,5 @@
-export ARCHS=armv7
-export TARGET=iphone:latest:4.3
+ARCHS=armv7
+TARGET = iphone::5.0
 include theos/makefiles/common.mk
 export GO_EASY_ON_ME=1
 TWEAK_NAME = iconbounce
