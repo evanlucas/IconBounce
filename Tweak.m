@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
+#import "CWLSynthesizeSingleton.h"
 #define PreferencesFilePath [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Preferences/com.ia.iconbouncepreferences.plist"]
 #define PreferencesChangedNotification "com.iconbouncepreferences.prefs"
 @interface SBIconListView : UIView
@@ -45,62 +46,21 @@ static double animationDuration = 1.6;
 static double bounceInterval = 2.7;
 
 @interface ELManager : NSObject
-+ (ELManager *)sharedELManager;
+CWL_DECLARE_SINGLETON_FOR_CLASS(ELManager)
 - (void)performBounce;
 - (void)performBounceForIconView:(SBIconView *)iv atIndex:(NSInteger)index withAnimationType:(AnimationType)type;
 - (void)repeatTimer:(NSTimer *)timer;
 - (void)startBouncing;
-//- (BOOL)enabled;
-//- (double)animationDuration;
-//- (double)bounceInterval;
 - (BOOL)hasOtherDockTweaks;
 - (NSArray *)positiveRotation:(BOOL)positive;
 - (void)setAnchorPoint:(CGPoint)pt forView:(UIView *)v;
 @property (nonatomic, retain) NSTimer *theTimer;
 @end
-//static NSDictionary *prefsDict = nil;
 
 @implementation ELManager
-static ELManager *sharedManager;
 @synthesize theTimer;
-+ (ELManager *)sharedELManager {
-    @synchronized(self){
-        if (sharedManager == nil) {
-            sharedManager = [[[self alloc] init] autorelease];
-        }
-    }
-    return sharedManager;
-}
-- (void)dealloc {
-    [theTimer release];
-    [super dealloc];
-}
-/*
-- (BOOL)enabled {
-    NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:PreferencesFilePath];
-    if (d) {
-        return [[d objectForKey:@"enableIconBounce"] boolValue];
-    }
-    return YES;
-}
-- (double)animationDuration {
-    NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:PreferencesFilePath];
-    if (d) {
-        return [[d objectForKey:@"animationDuration"] doubleValue] ? 1.6;
-    }
-    
-    return 1.6;
-}
+CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
 
-- (double)bounceInterval {
-    NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:PreferencesFilePath];
-    if (d) {
-        return [[d objectForKey:@"bounceInterval"] doubleValue] ? 2.7;
-    }
-    
-    return 2.7;
-}
- */
 - (BOOL)hasOtherDockTweaks {
     NSFileManager *fm = [NSFileManager defaultManager];
     if ([fm fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/Infinidock.dylib"]) {
@@ -113,23 +73,29 @@ static ELManager *sharedManager;
 }
 
 - (void)startBouncing {
-    [theTimer invalidate];
-    [self removeAnimations];
-    double ti = bounceInterval;
-    if (bounceInterval < animationDuration) {
-        ti += animationDuration;
-    }
+    @try {
+        [theTimer invalidate];
+        [self removeAnimations];
+        double ti = bounceInterval;
+        if (bounceInterval < animationDuration) {
+            ti += animationDuration;
+        }
         
-    theTimer = [NSTimer scheduledTimerWithTimeInterval:ti target:self selector:@selector(repeatTimer:) userInfo:nil repeats:YES];
-    [self performBounce];
-}
+        theTimer = [NSTimer scheduledTimerWithTimeInterval:ti target:self selector:@selector(repeatTimer:) userInfo:nil repeats:YES];
+        [self performBounce];
+
+    }
+    @catch (NSException *exception) {
+        NSLog(@"IconBounce caught exception: %@", exception);
+    }
+
+   }
 - (void)removeAnimations {
     SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
     Class SBIconView = NSClassFromString(@"SBIconView");
     if (enabled){
         SBDockIconListView *dock = [controller dock];
         if ([self hasOtherDockTweaks]) {
-            //Class IFScrollView = NSClassFromString(@"IFScrollView");
             NSArray *a = [dock subviews];
             if (![[a objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
                 NSArray *dockIcons = [[a objectAtIndex:0] subviews];
@@ -169,38 +135,15 @@ static ELManager *sharedManager;
     return [NSArray arrayWithArray:tempArray];
 }
 
-//- (NSArray *)swingValues {
-//    CGFloat start = 40.0f;
-//    NSMutableArray *temp = [[NSMutableArray alloc] init];
-//    for (int i=0; i<start; i+= 20) {
-//        [temp addObject:[NSNumber numberWithFloat:(start/180.0)*M_PI]];
-//        [temp addObject:[NSNumber numberWithFloat:(-start/180.0)*M_PI]];
-//    }
-//    [temp addObject:[NSNumber numberWithFloat:0]];
-//    return [NSArray arrayWithArray:temp];
-//}
-//- (NSArray *)swingTimings {
-//    NSMutableArray *temp = [[NSMutableArray alloc] init];
-//    for (int i=0; i<40.0f; i+= 20) {
-//        [temp addObject:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
-//    }
-//    return [NSArray arrayWithArray:temp];
-//}
-
-//- (NSArray *)swing {
-//    return [NSArray arrayWithObjects:[self deg:45], [self deg:-45], [self deg:30], [self deg:-30], [self deg:15], [self deg:-15], nil];
-//}
 - (NSNumber *)deg:(float)a {
     return [NSNumber numberWithFloat:(a/180.0f)*M_PI];
 }
 - (void)performBounce {
-    NSLog(@"PERFORM BOUNCE");
     SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
     Class SBIconView = NSClassFromString(@"SBIconView");
     if (enabled){
         SBDockIconListView *dock = [controller dock];
         if ([self hasOtherDockTweaks]) {
-            //Class IFScrollView = NSClassFromString(@"IFScrollView");
             NSArray *a = [dock subviews];
             if (![[a objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
                 NSArray *dockIcons = [[a objectAtIndex:0] subviews];
@@ -431,23 +374,6 @@ static ELManager *sharedManager;
             [layer addAnimation:group forKey:animationName];
         }
             break;
-//        case AnimationTypeSwing:
-//        {
-//            [self setAnchorPoint:CGPointMake(0.5, 0) forView:iv];
-//            
-//            CALayer *layer = iv.layer;
-//            NSString *animationName = [NSString stringWithFormat:@"Animation%d", index];
-//            [layer removeAnimationForKey:animationName];
-//            CAKeyframeAnimation *anim1 = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
-//            anim1.repeatCount = 1;
-//            anim1.duration = 1.6;
-//            anim1.removedOnCompletion = NO;
-//            anim1.fillMode = kCAFillModeForwards;
-//            anim1.values = [self swingValues];
-//            anim1.timingFunctions = [self swingTimings];
-//			[layer addAnimation:anim1 forKey:animationName];
-//        }
-//            break;
         default:
             break;
     }
@@ -488,18 +414,18 @@ static ELManager *sharedManager;
 }
 %end
 
+%hook SBIcon
+- (void)launch {
+    [[ELManager sharedELManager] removeAnimations];
+    %orig;
+}
+%end
 %hook SBIconController
 - (void)closeFolderTimerFired {
     [[ELManager sharedELManager] startBouncing];
     %orig;
 }
 %end
-/*
-static void preferenceChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-	[prefsDict release];
-	prefsDict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
-}
- */
 
 static void LoadSettings(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
 {
