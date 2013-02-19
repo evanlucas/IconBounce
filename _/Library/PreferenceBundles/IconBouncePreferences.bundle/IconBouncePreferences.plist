@@ -16,13 +16,27 @@
 			<key>default</key>
 			<true/>
 			<key>defaults</key>
-			<string>com.ia.iconbouncepreferences</string>
+			<string>com.curapps.iconbounce</string>
 			<key>key</key>
 			<string>enableIconBounce</string>
 			<key>label</key>
 			<string>Enable IconBounce</string>
 			<key>PostNotification</key>
-			<string>com.iconbouncepreferences.prefs</string>
+			<string>com.curapps.iconbounce.prefschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Customize Animations</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>Animations</string>
+			<key>detail</key>
+			<string>IBSettingsAnimationsController</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -40,11 +54,11 @@
 			<key>min</key>
 			<real>2.7</real>
 			<key>defaults</key>
-			<string>com.ia.iconbouncepreferences</string>
+			<string>com.curapps.iconbounce</string>
 			<key>key</key>
 			<string>bounceInterval</string>
 			<key>PostNotification</key>
-			<string>com.iconbouncepreferences.prefs</string>
+			<string>com.curapps.iconbounce.prefschanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -62,17 +76,17 @@
 			<key>min</key>
 			<real>1.6</real>
 			<key>defaults</key>
-			<string>com.ia.iconbouncepreferences</string>
+			<string>com.curapps.iconbounce</string>
 			<key>key</key>
 			<string>animationDuration</string>
 			<key>PostNotification</key>
-			<string>com.iconbouncepreferences.prefs</string>
+			<string>com.curapps.iconbounce.prefschanged</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Created By Evan Lucas</string>
+			<string>© 2012-2013 Evan Lucas</string>
 		</dict>
 		<dict>
 			<key>action</key>
@@ -92,7 +106,7 @@
 			<key>label</key>
 			<string>Follow on Twitter</string>
 			<key>icon</key>
-			<string>210-twitterbird</string>
+			<string>twitter</string>
 		</dict>
 	</array>
 	<key>title</key>
