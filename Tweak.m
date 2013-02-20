@@ -409,6 +409,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
 }
 %end
 
+/*
 %hook SBFolderIcon
 - (void)launch {
     [[ELManager sharedELManager] removeAnimations];
@@ -428,7 +429,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
     %orig;
 }
 %end
-
+*/
 static void LoadSettings()
 {
     NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
@@ -448,7 +449,7 @@ static void LoadSettings()
     NSArray *tempDisabledAnims = [dict objectForKey:@"DisabledAnimations"];
     NSArray *tempAllAnims = [dict objectForKey:@"AllAnimations"];
     animations = [[NSArray arrayWithArray:tempEnabledAnims] retain];
-    [[ELManager sharedELManager] startBouncing];
+   // [[ELManager sharedELManager] startBouncing];
     [dict release];
 }
 
