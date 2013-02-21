@@ -6,6 +6,44 @@
 #define PreferencesFilePath [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Preferences/com.curapps.iconbounce.plist"]
 #define PreferencesChangedNotification "com.curapps.iconbounce.prefschanged"
 
+
+@interface UIImage (IconBounce)
++ (UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)size;
+@end
+
+@implementation UIImage (IconBounce)
++ (UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)size
+{
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0.0);
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+@end
+@interface BBBulletin : NSObject
+- (id)sectionIconImageWithFormat:(int)format;
+@property (nonatomic, retain) NSString *title;
+@property (nonatomic, retain) NSString *message;
+@property (nonatomic, retain) NSString *sectionID;
+@end
+@interface BBBulletinRequest : BBBulletin
+
+@end
+@interface _UIMappedBitmapImage : UIImage
+{
+    NSData *_data;
+}
++ (void)initialize;
+- (void)_preheatBitmapData;
+@property (nonatomic, retain) NSData *data;
+- (id)_initWithOtherImage:(id)img;
+@end
+
+@interface SBBulletinBannerController : NSObject
+- (void)observer:(id)observer addBulletin:(id)bulletin forFeed:(int)feed;
+@end
+
 typedef enum AnimationType{
     AnimationTypeRotateClockwise = 0,
     AnimationTypeRotateCounterClockwise,
@@ -19,8 +57,9 @@ static BOOL enabled = YES;
 static double animationDuration = 1.6;
 static double bounceInterval = 2.7;
 static NSArray *animations;
-@interface ELManager : NSObject <NSURLConnectionDelegate>
+@interface ELManager : NSObject
 CWL_DECLARE_SINGLETON_FOR_CLASS(ELManager)
+//+ (ELManager *)sharedELManager;
 - (void)performBounce;
 - (void)performAnimationForIconView:(SBIconView *)iv atIndex:(NSInteger)index;
 - (void)repeatTimer:(NSTimer *)timer;
@@ -39,8 +78,37 @@ CWL_DECLARE_SINGLETON_FOR_CLASS(ELManager)
 CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
 - (void)dealloc {
     [theTimer release];
+//    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super dealloc];
 }
+//- (id)retain {
+//    return self;
+//}
+//- (NSUInteger)retainCount {
+//    return NSUIntegerMax;
+//}
+//- (oneway void)release {}
+//- (id)autorelease {
+//    return self;
+//}
+//+ (ELManager *)sharedELManager {
+//    @synchronized(self) {
+//        if (controller == nil) {
+//            controller = [[self alloc] init];
+//        }
+//    }
+//    return controller;
+//}
+//- (id)copyWithZone:(NSZone *)zone {
+//    return self;
+//}
+//- (id)init {
+//    if (self = [super init]) {
+//        NSLog(@"Initing");
+//        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showBanner) name:@"com.curapps.showbanner" object:nil];
+//    }
+//    return self;
+//}
 - (BOOL)hasOtherDockTweaks {
     NSFileManager *fm = [NSFileManager defaultManager];
     if ([fm fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/Infinidock.dylib"]) {
@@ -51,6 +119,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
     }
     return NO;
 }
+
 - (void)startBouncing {
     @try {
         [theTimer invalidate];
@@ -430,6 +499,36 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
 }
 %end
 */
+
+%hook BBBulletin
+- (id)sectionIconImageWithFormat:(int)format {
+    %log;
+    NSLog(@"SectionIconImageWithFormat: %d", format);
+	if ([[self sectionID] isEqualToString:@"com.curapps.iconbounce"]) {
+		UIImage *img = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/IconBouncePreferences.bundle/Icon@2x.png"];
+        UIImage *i = [UIImage imageWithImage:img scaledToSize:CGSizeMake(20, 20)];
+		return i;
+		//return [[objc_getClass("_UIMappedBitmapImage") alloc] _initWithOtherImage];
+	}
+	return %orig;
+}
+%end
+
+
+static void ShowBanner() {
+    NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
+    NSArray *tempEnabledAnims = [dict objectForKey:@"EnabledAnimations"];
+    animations = [[NSArray arrayWithArray:tempEnabledAnims] retain];
+    [dict release];
+    NSLog(@"Showing IconBounce Banner");
+    Class BBBulletinRequest = objc_getClass("BBBulletinRequest");
+    Class SBBulletinBannerController = objc_getClass("SBBulletinBannerController");
+    BBBulletinRequest *b = [[[BBBulletinRequest alloc] init] autorelease];
+	[b setTitle:@"IconBounce"];
+	[b setMessage:@"Animations Successfully Changed."];
+	[b setSectionID:@"com.curapps.iconbounce"];
+	[[SBBulletinBannerController sharedInstance] observer:nil addBulletin:b forFeed:2];
+}
 static void LoadSettings()
 {
     NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
@@ -445,11 +544,6 @@ static void LoadSettings()
     } else {
         bounceInterval = 2.7;
     }
-    NSArray *tempEnabledAnims = [dict objectForKey:@"EnabledAnimations"];
-    NSArray *tempDisabledAnims = [dict objectForKey:@"DisabledAnimations"];
-    NSArray *tempAllAnims = [dict objectForKey:@"AllAnimations"];
-    animations = [[NSArray arrayWithArray:tempEnabledAnims] retain];
-   // [[ELManager sharedELManager] startBouncing];
     [dict release];
 }
 
@@ -499,6 +593,7 @@ __attribute__((constructor)) static void ib_init() {
     }
     LoadSettings();
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void (*)(CFNotificationCenterRef, void *, CFStringRef, const void *, CFDictionaryRef))LoadSettings, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (void (*)(CFNotificationCenterRef, void *, CFStringRef, const void *, CFDictionaryRef))ShowBanner, CFSTR("com.curapps.showbanner"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	[pool release];
 }
 

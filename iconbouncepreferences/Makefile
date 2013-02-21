@@ -1,6 +1,6 @@
 include theos/makefiles/common.mk
-
-BUNDLE_NAME = IconBouncePreferences
+export GO_EASY_ON_ME=1
+BUNDLE_NAME= IconBouncePreferences
 IconBouncePreferences_FILES = IconBouncePreferences.mm IBSettingsAnimationsController.mm
 IconBouncePreferences_INSTALL_PATH = /Library/PreferenceBundles
 IconBouncePreferences_FRAMEWORKS = UIKit

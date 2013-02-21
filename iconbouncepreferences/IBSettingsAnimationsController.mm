@@ -1,9 +1,13 @@
 #import <UIKit/UIKit.h>
 #import "../NSObject+subscripts.h"
-
+#import <objc/runtime.h>
 #define PreferencesFilePath [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Preferences/com.curapps.iconbounce.plist"]
-#define PreferencesChangedNotification "com.curapps.iconbounce.prefschanged"
+#define PreferencesChangedNotification "com.curapps.animationsupdated"
 
+@interface ELManager : NSObject
++ (id)sharedELManager;
+- (void)showBannerWithMessage:(NSString *)message;
+@end
 @interface PSViewController : NSObject
 + (void)load;
 - (id)initForContentSize:(CGSize)size;
@@ -94,6 +98,7 @@
     if (!self.settingsChanged) {
         return;
     }
+    NSLog(@"PERFORM SAVE");
     [self animationsChanged];
 }
 - (void)dealloc {
@@ -127,9 +132,13 @@
     [_settings setObject:self.enabledAnimations forKey:@"EnabledAnimations"];
     [_settings setObject:self.disabledAnimations forKey:@"DisabledAnimations"];
     [_settings writeToFile:PreferencesFilePath atomically:YES];
-    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR(PreferencesChangedNotification), NULL, NULL, true);
+    Class ELManager = objc_getClass("ELManager");
+    //[[ELManager sharedELManager] showBannerWithMessage:@"Animations successfully updated!"];
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR("com.curapps.showbanner"), NULL, NULL, true);
+    NSLog(@"Animations changed");
     self.settingsChanged = NO;
     [self loadPrefs];
+    
 }
 - (id)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"IconBounceCell"];
