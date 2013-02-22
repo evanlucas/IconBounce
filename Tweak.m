@@ -121,23 +121,23 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
 }
 
 - (void)startBouncing {
-    @try {
-        [theTimer invalidate];
-        [self removeAnimations];
-        double ti = bounceInterval;
-        if (bounceInterval < animationDuration) {
-            ti += animationDuration;
-        }
+		@try {
+			[theTimer invalidate];
+			[self removeAnimations];
+			double ti = bounceInterval;
+			if (bounceInterval < animationDuration) {
+				ti += animationDuration;
+			}
         
-        theTimer = [NSTimer scheduledTimerWithTimeInterval:ti target:self selector:@selector(repeatTimer:) userInfo:nil repeats:YES];
-        [self performBounce];
+			theTimer = [NSTimer scheduledTimerWithTimeInterval:ti target:self selector:@selector(repeatTimer:) userInfo:nil repeats:YES];
+			[self performBounce];
 
-    }
-    @catch (NSException *exception) {
-        NSLog(@"IconBounce caught exception: %@", exception);
-    }
-
-   }
+		}
+		@catch (NSException *exception) {
+			NSLog(@"IconBounce caught exception: %@", exception);
+		}
+	
+}
 - (void)removeAnimations {
     SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
     Class SBIconView = NSClassFromString(@"SBIconView");
@@ -245,6 +245,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ELManager)
 }
 - (void)performAnimationForIconView:(SBIconView *)iv atIndex:(NSInteger)index {
     NSInteger totalCount = [animations count];
+	if (totalCount < 1) return;
     int randomIndex = (int)(arc4random() % totalCount);
     NSString *name = [[animations objectAtIndex:randomIndex] objectForKey:@"key"];
     AnimationType animType = [self animationTypeForName:name];
@@ -546,7 +547,26 @@ static void LoadSettings()
     }
     [dict release];
 }
-
+static void CreateSettings() {
+        NSMutableDictionary *d = [NSMutableDictionary dictionary];
+        [d setValue:[NSNumber numberWithBool:YES] forKey:@"enableIconBounce"];
+        [d setValue:[NSNumber numberWithDouble:1.6] forKey:@"animationDuration"];
+        [d setValue:[NSNumber numberWithDouble:2.7] forKey:@"bounceInterval"];
+        NSArray *allAnimations = [[NSMutableArray alloc] initWithObjects:
+                                  [NSDictionary dictionaryWithObjectsAndKeys:@"RotateClockwise", @"key", @"Rotate Clockwise", @"title", nil],
+                                  [NSDictionary dictionaryWithObjectsAndKeys:@"RotateCounterClockwise", @"key", @"Rotate Counter Clockwise", @"title", nil],
+                                  [NSDictionary dictionaryWithObjectsAndKeys:@"FlipHorizontal", @"key", @"Flip Horizontal", @"title", nil],
+                                  [NSDictionary dictionaryWithObjectsAndKeys:@"FlipVertical", @"key", @"Flip Vertical", @"title", nil],
+                                  [NSDictionary dictionaryWithObjectsAndKeys:@"Bounce", @"key", @"Bounce", @"title", nil],
+                                  [NSDictionary dictionaryWithObjectsAndKeys:@"RotateFlipAndBounce", @"key", @"Rotate, Flip, and Bounce", @"title", nil],
+                                  nil];
+        NSArray *enabledAnimations = [[NSArray alloc] initWithArray:allAnimations];
+        [d setValue:enabledAnimations forKey:@"EnabledAnimations"];
+        [d setValue:[NSNumber numberWithBool:YES] forKey:@"HasRun"];
+        [allAnimations release];
+        [enabledAnimations release];
+        [d writeToFile:PreferencesFilePath atomically:YES];
+}
 __attribute__((constructor)) static void ib_init() {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -555,26 +575,7 @@ __attribute__((constructor)) static void ib_init() {
 		return;
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:PreferencesFilePath]) {
-        NSMutableDictionary *d = [NSMutableDictionary dictionary];
-        [d setValue:[NSNumber numberWithBool:YES] forKey:@"enableIconBounce"];
-        [d setValue:[NSNumber numberWithDouble:1.6] forKey:@"animationDuration"];
-        [d setValue:[NSNumber numberWithDouble:2.7] forKey:@"bounceInterval"];
-        NSArray *allAnimations = [[NSMutableArray alloc] initWithObjects:
-                            [NSDictionary dictionaryWithObjectsAndKeys:@"RotateClockwise", @"key", @"Rotate Clockwise", @"title", nil],
-                            [NSDictionary dictionaryWithObjectsAndKeys:@"RotateCounterClockwise", @"key", @"Rotate Counter Clockwise", @"title", nil],
-                            [NSDictionary dictionaryWithObjectsAndKeys:@"FlipHorizontal", @"key", @"Flip Horizontal", @"title", nil],
-                            [NSDictionary dictionaryWithObjectsAndKeys:@"FlipVertical", @"key", @"Flip Vertical", @"title", nil],
-                            [NSDictionary dictionaryWithObjectsAndKeys:@"Bounce", @"key", @"Bounce", @"title", nil],
-                            [NSDictionary dictionaryWithObjectsAndKeys:@"RotateFlipAndBounce", @"key", @"Rotate, Flip, and Bounce", @"title", nil],
-                            nil];
-        NSArray *enabledAnimations = [[NSArray alloc] initWithArray:allAnimations];
-        NSArray *disabledAnimations = [[NSArray alloc] init];
-        [d setValue:enabledAnimations forKey:@"EnabledAnimations"];
-        [d setValue:disabledAnimations forKey:@"DisabledAnimations"];
-        [allAnimations release];
-        [enabledAnimations release];
-        [disabledAnimations release];
-        [d writeToFile:PreferencesFilePath atomically:YES];
+        CreateSettings();
     } else {
         NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
         enabled = [[dict objectForKey:@"enableIconBounce"] boolValue];
@@ -587,6 +588,10 @@ __attribute__((constructor)) static void ib_init() {
             bounceInterval = [[dict objectForKey:@"bounceInterval"] doubleValue];
         } else {
             bounceInterval = 2.7;
+        }
+        BOOL hasRun = [[dict objectForKey:@"HasRun"] boolValue];
+        if (!hasRun) {
+            CreateSettings();
         }
         animations = [[NSArray arrayWithArray:[dict objectForKey:@"EnabledAnimations"]] retain];
         [dict release];
