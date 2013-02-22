@@ -98,7 +98,6 @@
     if (!self.settingsChanged) {
         return;
     }
-    NSLog(@"PERFORM SAVE");
     [self animationsChanged];
 }
 - (void)dealloc {
@@ -135,7 +134,6 @@
     Class ELManager = objc_getClass("ELManager");
     //[[ELManager sharedELManager] showBannerWithMessage:@"Animations successfully updated!"];
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR("com.curapps.showbanner"), NULL, NULL, true);
-    NSLog(@"Animations changed");
     self.settingsChanged = NO;
     [self loadPrefs];
     
