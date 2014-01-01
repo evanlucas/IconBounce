@@ -1,6 +1,8 @@
 ARCHS=armv7 armv7s arm64
-TARGET = iphone:clang:7.0
+TARGET = iphone:clang
 
+TARGET_IPHONEOS_DEPLOYMENT_VERSION = 5.0
+TARGET_IPHONEOS_DEPLOYMENT_VERSION_arm64 = 7.0
 include theos/makefiles/common.mk
 
 export GO_EASY_ON_ME=1
