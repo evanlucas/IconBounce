@@ -449,7 +449,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
 // Hooks
 
 %hook SBUIController %group FIRMWARE_LTE_iOS_7_0
-- (void)finishUnscattering {
+- (void)finishedUnscattering {
   %orig;
   [[IBManager sharedIBManager] startBouncing];
 }
