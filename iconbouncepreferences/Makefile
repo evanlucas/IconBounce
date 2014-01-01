@@ -7,7 +7,7 @@ export GO_EASY_ON_ME=1
 BUNDLE_NAME = IconBouncePreferences
 IconBouncePreferences_FILES = IconBouncePreferences.mm IBSettingsAnimationsController.mm
 IconBouncePreferences_INSTALL_PATH = /Library/PreferenceBundles
-IconBouncePreferences_FRAMEWORKS = UIKit
+IconBouncePreferences_FRAMEWORKS = UIKit Foundation
 IconBouncePreferences_PRIVATE_FRAMEWORKS = Preferences
 
 include $(THEOS_MAKE_PATH)/bundle.mk
