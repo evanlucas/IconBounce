@@ -31,4 +31,9 @@ $ curl http://debmaker-osx.googlecode.com/svn-history/r5/trunk/dpkg-deb > ~/bin/
 $ chmod +x ~/bin/dpkg-deb
 ```
 
+### Update theos
 
+```bash
+$ rm theos && ln -s $THEOS theos
+$ rm iconbouncepreferences/theos && ln -s $THEOS iconbouncepreferences/theos
+```
