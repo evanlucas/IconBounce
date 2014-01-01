@@ -558,10 +558,8 @@ __attribute__((constructor)) static void ib_init() {
     return;
   
   if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_6_0) {
-    IBLog(@"iOS 7");
     %init(FIRMWARE_GTE_iOS_7_0);
   } else {
-    IBLog(@"< iOS 7");
     %init(FIRMWARE_LTE_iOS_7_0);
   }
   
