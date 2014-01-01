@@ -4,7 +4,6 @@
 #import "CWLSynthesizeSingleton.h"
 #import "SpringBoard.h"
 #import "Firmware.h"
-#import "NSObject+subscripts.h"
 
 #define PreferencesFilePath [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Preferences/com.curapps.iconbounce.plist"]
 #define PreferencesChangedNotification "com.curapps.iconbounce.prefschanged"
@@ -63,12 +62,12 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
     SBDockIconListView *dock = [controller iconBounceDock];
     if (![self dockSubviewsAreIconViews]) {
       NSArray *a = [dock subviews];
-      if (![a[0] isKindOfClass:[SBIconView class]]) {
-        NSArray *dockIcons = [a[0] subviews];
+      if (![[a objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
+        NSArray *dockIcons = [[a objectAtIndex:0] subviews];
         int count = [dockIcons count];
         for (int i=0; i<count; i++) {
-          if ([dockIcons[i] isKindOfClass:[SBIconView class]]) {
-            CALayer *layer = [dockIcons[i] layer];
+          if ([[dockIcons objectAtIndex:i] isKindOfClass:[SBIconView class]]) {
+            CALayer *layer = [[dockIcons objectAtIndex:i] layer];
             [layer removeAllAnimations];
           }
         }
@@ -77,8 +76,8 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
       NSArray *dockIcons = [dock subviews];
       int count = [dockIcons count];
       for (int i=0; i<count; i++) {
-        if ([dockIcons[i] isKindOfClass:[SBIconView class]]) {
-          CALayer *layer = [dockIcons[i] layer];
+        if ([[dockIcons objectAtIndex:i] isKindOfClass:[SBIconView class]]) {
+          CALayer *layer = [[dockIcons objectAtIndex:i] layer];
           [layer removeAllAnimations];
         }
       }
@@ -132,19 +131,22 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
 }
 
 - (void)performBounce {
+  IBLog(@"performBounce");
   SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
   Class SBIconView = NSClassFromString(@"SBIconView");
   if (enabled) {
+    IBLog(@"enabled");
     SBDockIconListView *dock = [controller iconBounceDock];
     if (![self dockSubviewsAreIconViews]) {
+      IBLog(@"dock subviews are not of class SBIconView");
       NSArray *a = [dock subviews];
-      if (![a[0] isKindOfClass:[SBIconView class]]) {
-        NSArray *dockIcons = [a[0] subviews];
+      if (![[a objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
+        NSArray *dockIcons = [[a objectAtIndex:0] subviews];
         int count = [dockIcons count];
         if (count != 0) {
           int current = (int)(arc4random() % count);
-          if ([dockIcons[current] isKindOfClass:[SBIconView class]]) {
-            id theIconView = dockIcons[current];
+          if ([[dockIcons objectAtIndex:current] isKindOfClass:[SBIconView class]]) {
+            id theIconView = [dockIcons objectAtIndex:current];
             if (!animateLabels) {
               if ([theIconView respondsToSelector:@selector(iconImageView)]) {
                 IBLog(@"[SBIconView respondsToSelector:@select(iconImageView)] - YES");
@@ -167,12 +169,13 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
         }
       }
     } else {
+      IBLog(@"dock subviews are of class SBIconView");
       NSArray *dockIcons = [dock subviews];
       int count = [dockIcons count];
       if (count != 0) {
-        if ([dockIcons[0] isKindOfClass:[SBIconView class]]) {
+        if ([[dockIcons objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
           int current = (int)(arc4random() % count);
-          id theIconView = dockIcons[current];
+          id theIconView = [dockIcons objectAtIndex:current];
           if (!animateLabels) {
             if ([theIconView respondsToSelector:@selector(iconImageView)]) {
               IBLog(@"[SBIconView respondsToSelector:@select(iconImageView)] - YES");
@@ -482,7 +485,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
 
 static void ReloadSettings() {
   NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
-  NSArray *tempEnabledAnims = dict[@"EnabledAnimations"];
+  NSArray *tempEnabledAnims = [dict objectForKey:@"EnabledAnimations"];
   animations = [[NSArray arrayWithArray:tempEnabledAnims] retain];
   [dict release];
 }
@@ -516,7 +519,7 @@ static void LoadSettings() {
     animateLabels = NO;
   }
   
-  if ([dict[@"debugIconBounce"] boolValue]) {
+  if ([[dict objectForKey:@"debugIconBounce"] boolValue]) {
     debug = YES;
   } else {
     debug = NO;
@@ -570,7 +573,7 @@ __attribute__((constructor)) static void ib_init() {
     NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
     enabled = [[dict objectForKey:@"enableIconBounce"] boolValue];
     
-    debug = [dict[@"debugIconBounce"] boolValue];
+    debug = [[dict objectForKey:@"debugIconBounce"] boolValue];
     
     if ([[dict objectForKey:@"animationDuration"] doubleValue]) {
       animationDuration = [[dict objectForKey:@"animationDuration"] doubleValue];

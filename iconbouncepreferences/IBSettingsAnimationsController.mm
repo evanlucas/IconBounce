@@ -1,5 +1,4 @@
 #import <UIKit/UIKit.h>
-#import "../include/NSObject+subscripts.h"
 #import <objc/runtime.h>
 #define PreferencesFilePath [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Preferences/com.curapps.iconbounce.plist"]
 #define PreferencesChangedNotification "com.curapps.prefschanged"
