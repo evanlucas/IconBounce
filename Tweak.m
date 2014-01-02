@@ -73,6 +73,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
     SBDockIconListView *dock = [controller iconBounceDock];
     if (![self dockSubviewsAreIconViews]) {
       NSArray *a = [dock subviews];
+      if (a.count == 0) return;
       if (![[a objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
         NSArray *dockIcons = [[a objectAtIndex:0] subviews];
         int count = [dockIcons count];
@@ -151,6 +152,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
     if (![self dockSubviewsAreIconViews]) {
       IBLog(@"dock subviews are not of class SBIconView");
       NSArray *a = [dock subviews];
+      if (a.count == 0) return;
       if (![[a objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
         NSArray *dockIcons = [[a objectAtIndex:0] subviews];
         int count = [dockIcons count];
