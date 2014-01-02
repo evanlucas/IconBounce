@@ -5,5 +5,6 @@ Version: 2.0.0
 Architecture: iphoneos-arm
 Description: A tweak to make your dock icons randomly bounce and do other animations.
 Maintainer: Evan Lucas
+Homepage: http://curapps.com/apps/iconbounce
 Author: Evan Lucas
 Section: Tweaks
