@@ -51,8 +51,19 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(IBManager)
 }
 
 - (BOOL)dockSubviewsAreIconViews {
+  SBIconController *controller = [NSClassFromString(@"SBIconController") sharedInstance];
+  Class SBIconView = NSClassFromString(@"SBIconView");
+  SBDockIconListView *dock = [controller iconBounceDock];
+  NSArray *dockSubviews = [dock subviews];
+  if (dockSubviews.count == 0) {
+    IBLog(@"Dock has no subviews...");
+    return NO;
+  }
+  if ([[dockSubviews objectAtIndex:0] isKindOfClass:[SBIconView class]]) {
+    return YES;
+  }
   
-  return YES;
+  return NO;
 }
 
 - (void)removeAnimations {
