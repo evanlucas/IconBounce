@@ -570,7 +570,7 @@ __attribute__((constructor)) static void ib_init() {
   if (![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.springboard"])
     return;
   
-  if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_6_0) {
+  if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0) {
     %init(FIRMWARE_GTE_iOS_7_0);
   } else {
     %init(FIRMWARE_LTE_iOS_7_0);
