@@ -1,17 +1,58 @@
 #import <UIKit/UIKit.h>
 @interface PSListController
 {
-    NSArray *_specifiers;
+  NSArray *_specifiers;
 }
 - (NSArray *)loadSpecifiersFromPlistName:(NSString *)name target:(id)target;
 @end
+
+@interface PSSpecifier : NSObject {
+@private
+  NSMutableDictionary *_properties;
+}
+
+@property(retain) NSMutableDictionary* properties;
+@end
+
 @interface IconBouncePreferencesListController: PSListController {
 }
 - (id)specifiers;
 - (void)donate:(id)arg;
+- (id)readPreferenceValue:(PSSpecifier *)specifier;
+- (void)setPreferenceValue:(id)value specifier:(PSSpecifier *)specifier;
 @end
 
+#define PATH_COMPONENT @"Library/Preferences/com.curapps.iconbounce.plist"
+#define HOME NSHomeDirectory()
+#define PREFS_PATH [HOME stringByAppendingPathComponent:PATH_COMPONENT]
+
 @implementation IconBouncePreferencesListController
+
+// The next two are from
+// http://iphonedevwiki.net/index.php/PreferenceBundles#Loading_Preferences_into_sandboxed.2Funsandboxed_processes_in_iOS_8
+- (id)readPreferenceValue:(PSSpecifier *)specifier {
+	NSDictionary *s = [NSDictionary dictionaryWithContentsOfFile:PREFS_PATH];
+	if (!s[specifier.properties[@"key"]]) {
+		return specifier.properties[@"default"];
+	}
+	return s[specifier.properties[@"key"]];
+}
+
+- (void)setPreferenceValue:(id)value specifier:(PSSpecifier *)specifier {
+	NSMutableDictionary *defaults = [NSMutableDictionary dictionary];
+	[defaults addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:PREFS_PATH]];
+	[defaults setObject:value forKey:specifier.properties[@"key"]];
+	[defaults writeToFile:PREFS_PATH atomically:YES];
+	CFStringRef toPost = (CFStringRef)specifier.properties[@"PostNotification"];
+	if (toPost) {
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                                         toPost,
+                                         NULL,
+                                         NULL,
+                                         YES);
+  }
+}
+
 - (id)specifiers {
 	if(_specifiers == nil) {
 		_specifiers = [[self loadSpecifiersFromPlistName:@"IconBouncePreferences" target:self] retain];

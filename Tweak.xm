@@ -521,15 +521,8 @@ static void ReloadSettings() {
 static void LoadSettings() {
   NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:PREFS_PATH];
   IBLog(@"Loading settings");
-  id temp = [dict objectForKey:@"enableIconBounce"];
-  if (!temp) {
-    IBLog(@"enableIconBounce: YES");
-    enabled = YES;
-  } else {
-    IBLog(@"enableIconBounce %@", [temp boolValue] ? @"YES" : @"NO");
-    enabled = [temp boolValue];
-  }
-
+  enabled = [[dict objectForKey:@"enableIconBounce"] boolValue];
+  IBLog(@"ENABLED: %@", enabled ? @"YES" : @"NO");
   if ([[dict objectForKey:@"animationDuration"] doubleValue]) {
     animationDuration = [[dict objectForKey:@"animationDuration"] doubleValue];
   } else {
