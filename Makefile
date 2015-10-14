@@ -18,3 +18,6 @@ include theos/makefiles/tweak.mk
 include theos/makefiles/aggregate.mk
 
 INSTALL_TARGET_PROCESSES = SpringBoard
+
+after-install::
+	install.exec "killall -9 SpringBoard"
