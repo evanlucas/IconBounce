@@ -1,9 +1,7 @@
-ARCHS=armv7 armv7s arm64
-TARGET = iphone:clang
+IPHONE_ARCHS = armv7 armv7s arm64
 
 TARGET_IPHONEOS_DEPLOYMENT_VERSION = 5.0
 TARGET_IPHONEOS_DEPLOYMENT_VERSION_arm64 = 7.0
-include theos/makefiles/common.mk
 
 export GO_EASY_ON_ME=1
 
@@ -15,9 +13,8 @@ IconBounce_PrivateFrameworks = BulletinBoard
 ADDITIONAL_CFLAGS = -Iinclude
 
 SUBPROJECTS = IconBouncePreferences
+include theos/makefiles/common.mk
+include theos/makefiles/tweak.mk
+include theos/makefiles/aggregate.mk
 
-include $(THEOS_MAKE_PATH)/tweak.mk
-include $(THEOS_MAKE_PATH)/aggregate.mk
-
-after-install::
-	install.exec "killall -9 SpringBoard"
+INSTALL_TARGET_PROCESSES = SpringBoard
