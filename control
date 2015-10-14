@@ -1,7 +1,7 @@
 Package: com.ia.iconbounce
 Name: IconBounce
 Depends: mobilesubstrate, preferenceloader
-Version: 3.0.0-rc1
+Version: 3.0.0
 Architecture: iphoneos-arm
 Description: A tweak to make your dock icons randomly bounce and do other animations.
 Maintainer: Evan Lucas
