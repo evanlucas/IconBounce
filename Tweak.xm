@@ -541,17 +541,9 @@ static void LoadSettings() {
     bounceInterval = 2.7;
   }
 
-  if ([[dict objectForKey:@"bounceLabels"] boolValue]) {
-    animateLabels = YES;
-  } else {
-    animateLabels = NO;
-  }
+  animateLabels = [[dict objectForKey:@"bounceLabels"] boolValue];
+  debug = [[dict objectForKey:@"debugIconBounce"] boolValue];
 
-  if ([[dict objectForKey:@"debugIconBounce"] boolValue]) {
-    debug = YES;
-  } else {
-    debug = NO;
-  }
   [dict release];
 }
 
