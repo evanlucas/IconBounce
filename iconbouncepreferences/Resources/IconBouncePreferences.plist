@@ -116,7 +116,7 @@
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
-			<string>Follow on Twitter</string>
+			<string> Follow on Twitter</string>
 			<key>icon</key>
 			<string>twitter</string>
 		</dict>
