@@ -30,6 +30,7 @@
 - (void)iconTapped:(SBIcon *)icon;
 - (id)iconBounceDock;
 - (id)dockListView; // iOS 7
+- (BOOL)respondsToSelector:(SEL)a;
 @end
 
 @interface SBUIController : NSObject
@@ -43,5 +44,3 @@
 @interface SBUIController (iOS7)
 - (void)restoreContent;
 @end
-
-
