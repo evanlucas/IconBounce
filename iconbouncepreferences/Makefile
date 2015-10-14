@@ -7,6 +7,7 @@ IconBouncePreferences_FILES = IconBouncePreferences.mm IBSettingsAnimationsContr
 IconBouncePreferences_INSTALL_PATH = /Library/PreferenceBundles
 IconBouncePreferences_FRAMEWORKS = UIKit Foundation
 IconBouncePreferences_PRIVATE_FRAMEWORKS = Preferences
+IconBouncePreferences_LDFLAGS += -Wl,-segalign,4000
 
 include theos/makefiles/common.mk
 include theos/makefiles/bundle.mk

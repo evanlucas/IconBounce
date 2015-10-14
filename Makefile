@@ -9,7 +9,7 @@ TWEAK_NAME = IconBounce
 IconBounce_FILES = Tweak.xm
 IconBounce_FRAMEWORKS = UIKit QuartzCore CoreGraphics Foundation
 IconBounce_PrivateFrameworks = BulletinBoard
-
+IconBounce_LDFLAGS += -Wl,-segalign,4000
 ADDITIONAL_CFLAGS = -Iinclude
 
 SUBPROJECTS = IconBouncePreferences
