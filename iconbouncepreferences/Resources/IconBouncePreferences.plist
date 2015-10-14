@@ -124,7 +124,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>© 2012-2014 Evan Lucas</string>
+			<string>© 2012-2015 Evan Lucas</string>
 			<key>label</key>
 			<string>Developer</string>
 		</dict>
